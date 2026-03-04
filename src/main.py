@@ -6,7 +6,9 @@ import cv2
 
 prep = ImagePreprocessor()
 
-im = prep.read_image("C:/Users/User/Documents/ml/cat_dog_classifier/data/train/cat.0.jpg")
-cv2.imshow("my first image with openCV", im)
-
+prep.prep_im_batch()
+i = prep.im_tensor[0].numpy()
+# i = i.reshape(1, i.shape[0], i.shape[1])
+print(i.shape)
+cv2.imshow("window",i)
 cv2.waitKey(0)
