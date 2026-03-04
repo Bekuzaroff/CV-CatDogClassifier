@@ -6,9 +6,10 @@ import cv2
 
 prep = ImagePreprocessor()
 
-prep.prep_im_batch()
-i = prep.im_tensor[0].numpy()
-# i = i.reshape(1, i.shape[0], i.shape[1])
-print(i.shape)
-cv2.imshow("window",i)
+b = []
+for batch in prep.batch_generator("/data/train/"):
+    b = batch
+    break
+print(b[1][0])
+cv2.imshow("window", b[0][0])
 cv2.waitKey(0)
