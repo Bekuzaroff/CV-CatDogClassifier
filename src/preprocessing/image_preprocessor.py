@@ -1,14 +1,15 @@
 import cv2 as cv
 import os
+import keras
 import numpy as np
 import tensorflow as tf
 import random
 
 class ImagePreprocessor():
-    def __init__(self):
-        self.batch_size = 32
+    def __init__(self, batch_size=32):
+        self.batch_size = batch_size
 
-    def read_image(self, im_abs_path: str):
+    def read_image(self, im_abs_path: str, channels: bool = False):
         '''
         just reading image and checking if it exists:
             params:
@@ -16,7 +17,7 @@ class ImagePreprocessor():
             output type: Matlike | None
         '''
         try:
-            im = cv.imread(im_abs_path, 0)
+            im = cv.imread(im_abs_path, int(channels))
 
             if im is None: # if no image or other type (not image)
                 raise Exception("no such image")
@@ -35,8 +36,7 @@ class ImagePreprocessor():
                 im_size: int - image size we need
         '''
         preped_im = cv.resize(image, (im_size, im_size)) # resizing image
-        preped_im = preped_im / 255.0 # scaling all the pixels
-        preped_im = preped_im.reshape(im_size, im_size, 1)
+        preped_im = keras.applications.resnet50.preprocess_input(preped_im)
 
         return preped_im
     
@@ -58,11 +58,11 @@ class ImagePreprocessor():
         
         random.shuffle(f_names)
 
-        for f_name in f_names:
+        for f_name in f_names[:1000]:
             # join img name to data dir path, reading and preproc img ->
             img_path = os.path.join(cur_dir + data_dir, f_name)
 
-            mat_im = self.read_image(img_path)
+            mat_im = self.read_image(img_path, True)
             mat_im = self.im_preprocess(mat_im, im_size)
 
             # adding prepared img and label to list ->
