@@ -7,13 +7,22 @@ if __name__ == '__main__':
     prep = ImagePreprocessor() # custom preproc class
 
     lenet_model.model.compile(optimizer="adam", loss="binary_crossentropy")
-
+    k = 0
     # making batchs and training model on them ->
     for batch in prep.batch_generator("/data/train/", 32):
         train_x = batch[0] # images in array in batch array[3D - (w, h, channel)]
         train_y = batch[1] # labels in batch (vector)
 
         lenet_model.train_on_batch(train_x, train_y)
-        break
+        k += 1
+        print(k)
+        
 
+    
+    for batch in prep.batch_generator("/data/val/", 32):
+        test_x = batch[0] # images in array in batch array[3D - (w, h, channel)]
+
+        predicts = lenet_model.predict_on_batch(test_x)
+        print(predicts, batch[1])
+        break
 

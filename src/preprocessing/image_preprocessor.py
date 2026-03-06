@@ -2,6 +2,8 @@ import cv2 as cv
 import os
 import numpy as np
 import tensorflow as tf
+import random
+
 class ImagePreprocessor():
     def __init__(self):
         self.batch_size = 32
@@ -38,7 +40,7 @@ class ImagePreprocessor():
 
         return preped_im
     
-    def batch_generator(self, data_dir, im_size):
+    def batch_generator(self, data_dir, im_size, is_test=False):
         '''
         gives one image batch a time
         params:
@@ -53,7 +55,9 @@ class ImagePreprocessor():
 
         batch = [] # batch for images
         batch_y = [] # batch for labels
-         
+        
+        random.shuffle(f_names)
+
         for f_name in f_names:
             # join img name to data dir path, reading and preproc img ->
             img_path = os.path.join(cur_dir + data_dir, f_name)
@@ -63,12 +67,15 @@ class ImagePreprocessor():
 
             # adding prepared img and label to list ->
             batch.append(mat_im)
-            batch_y.append(1 if f_name.split('.')[0] == "dog" else 0)
+            
+            if not is_test:
+                batch_y.append(1 if f_name.split('.')[0] == "dog" else 0)
 
             # if we got the first batch full ->
             if len(batch) == self.batch_size:
                 yield (np.array(batch), np.array(batch_y)) # giving one tuple a time
                 batch = []
+                batch_y = []
 
         # for least not full batch ->
         if batch:
