@@ -42,7 +42,7 @@ class ImagePreprocessor():
         
         self.im_tensor = tf.convert_to_tensor(buff)
     
-    def batch_generator(self, data_dir, im_size=28):
+    def batch_generator(self, data_dir, im_size):
         cur_dir = os.getcwd()
         cur_dir = cur_dir.replace("\\", "/")
         f_names = os.listdir(cur_dir + data_dir)
