@@ -1,24 +1,19 @@
-import keras
-
-
 from models.lenet5 import LeNet5
 from preprocessing.image_preprocessor import ImagePreprocessor
-import cv2
 
 
-m1 = LeNet5()
-prep = ImagePreprocessor()
+if __name__ == '__main__':
+    lenet_model = LeNet5() # first cv model (lenet architecture)
+    prep = ImagePreprocessor() # custom preproc class
 
-b = []
+    lenet_model.model.compile(optimizer="adam", loss="binary_crossentropy")
 
-m1.model.compile(optimizer="adam", loss="binary_crossentropy")
+    # making batchs and training model on them ->
+    for batch in prep.batch_generator("/data/train/", 32):
+        train_x = batch[0] # images in array in batch array[3D - (w, h, channel)]
+        train_y = batch[1] # labels in batch (vector)
 
-for batch in prep.batch_generator("/data/train/", 32):
-    trainx = batch[0]
-    trainy = batch[1]
-    b = trainx
-    m1.train_on_batch(trainx, trainy)
-    break
+        lenet_model.train_on_batch(train_x, train_y)
+        break
 
-preds = m1.predict_on_batch(b)
-print(preds)
+
