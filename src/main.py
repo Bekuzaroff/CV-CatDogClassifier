@@ -1,15 +1,13 @@
-from models.lenet5 import LeNet5
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+
 from models.resnet50 import ResNet50
 from preprocessing.image_preprocessor import ImagePreprocessor
 
 
 if __name__ == '__main__':
-    lenet_model = LeNet5(input_shape=(32, 32, 1), batch_size=32) # first cv model (lenet architecture)
     resnet50 = ResNet50(input_shape=(224, 224, 3), batch_size=32)
 
     prep = ImagePreprocessor(batch_size=32) # custom preproc class
-
-    lenet_model.model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
     resnet50.model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
     k = 0
     # making batchs and training model on them ->
@@ -22,14 +20,25 @@ if __name__ == '__main__':
         
         print(k)
         
-
-    
+    k = 0
+    recalls = []
+    precisions = []
     for batch in prep.batch_generator("/data/val/", 224):
         test_x = batch[0] # images in array in batch array[3D - (w, h, channel)]
 
         predicts = resnet50.predict_on_batch(test_x)
         pred_classes = (predicts > 0.5).astype(int)
-        
-        print(pred_classes, batch[1])
-        break
+        y_true = batch[1]
 
+        recalls.append(recall_score(y_true, pred_classes))
+        precisions.append(precision_score(y_true, pred_classes))
+        k+=1
+        print(k)
+
+    avg_recall = sum(recalls) / len(recalls)
+    avg_precision = sum(precisions) / len(precisions)
+    print(avg_recall)
+    print(avg_precision)
+
+    if avg_precision > 0.96 and avg_precision > 0.96:
+        resnet50.model.save("my_model.keras")
