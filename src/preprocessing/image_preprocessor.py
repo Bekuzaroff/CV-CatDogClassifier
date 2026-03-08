@@ -8,6 +8,8 @@ import random
 class ImagePreprocessor():
     def __init__(self, batch_size=32):
         self.batch_size = batch_size
+        self.mean = np.array([0.485, 0.456, 0.406])
+        self.std = np.array([0.229, 0.224, 0.225])
 
     def read_image(self, im_abs_path: str, channels: bool = False):
         '''
@@ -35,8 +37,17 @@ class ImagePreprocessor():
                 image: array[2D] - image in iterable type in 2D
                 im_size: int - image size we need
         '''
-        preped_im = cv.resize(image, (im_size, im_size)) # resizing image
-        preped_im = keras.applications.resnet50.preprocess_input(preped_im)
+         # Resize
+        preped_im = cv.resize(image, (im_size, im_size))
+        
+        # BGR -> RGB
+        preped_im = cv.cvtColor(preped_im, cv.COLOR_BGR2RGB)
+        
+        # float32 and 0-1
+        preped_im = preped_im.astype(np.float32) / 255.0
+        
+        # Normalize
+        preped_im = (preped_im - self.mean) / self.std
 
         return preped_im
     

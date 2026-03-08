@@ -1,3 +1,4 @@
 /venv/
 /data/
 my_model.keras
+my_model.pth
