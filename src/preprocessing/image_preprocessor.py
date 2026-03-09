@@ -1,9 +1,5 @@
 import cv2 as cv
-import os
-import keras
 import numpy as np
-import tensorflow as tf
-import random
 
 class ImagePreprocessor():
     def __init__(self, batch_size=32):
@@ -50,47 +46,6 @@ class ImagePreprocessor():
         preped_im = (preped_im - self.mean) / self.std
 
         return preped_im
-    
-    def batch_generator(self, data_dir, im_size, is_test=False):
-        '''
-        gives one image batch a time
-        params:
-            data_dir - str (your path with data-set)
-            im_size - int (the size of image to resize to)
-        return:
-            Tuple[Numpy.array] - tuple[0] - images, tuple[1] - labels
-        '''
-        cur_dir = os.getcwd() # cur dir
-        cur_dir = cur_dir.replace("\\", "/") 
-        f_names = os.listdir(cur_dir + data_dir)
-
-        batch = [] # batch for images
-        batch_y = [] # batch for labels
-        
-        random.shuffle(f_names)
-
-        for f_name in f_names[:1000]:
-            # join img name to data dir path, reading and preproc img ->
-            img_path = os.path.join(cur_dir + data_dir, f_name)
-
-            mat_im = self.read_image(img_path, True)
-            mat_im = self.im_preprocess(mat_im, im_size)
-
-            # adding prepared img and label to list ->
-            batch.append(mat_im)
-            
-            if not is_test:
-                batch_y.append(1 if f_name.split('.')[0] == "dog" else 0)
-
-            # if we got the first batch full ->
-            if len(batch) == self.batch_size:
-                yield (np.array(batch), np.array(batch_y)) # giving one tuple a time
-                batch = []
-                batch_y = []
-
-        # for least not full batch ->
-        if batch:
-            yield (np.array(batch), np.array(batch_y))
 
 
 

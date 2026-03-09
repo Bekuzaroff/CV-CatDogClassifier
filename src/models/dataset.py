@@ -18,7 +18,7 @@ class MyDataset(Dataset):
         f_names = os.listdir(cur_dir + data_dir)
         random.shuffle(f_names)
 
-        for f_name in f_names[:6000]:  # сколько угодно
+        for f_name in f_names:  # сколько угодно
             self.file_list.append(os.path.join(cur_dir + data_dir, f_name))
             self.labels.append([1] if 'dog' in f_name.lower() else [0])
     
@@ -34,3 +34,10 @@ class MyDataset(Dataset):
         x = x.permute(2, 0, 1)
         y = t.LongTensor(self.labels[index])[0]
         return x, y
+
+
+
+
+# Exercises 
+# 1. optimize testing
+# 2. create dataset for validation

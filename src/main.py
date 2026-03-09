@@ -1,12 +1,6 @@
-import os
-import random
-
 import numpy as np
-from sklearn.metrics import accuracy_score, precision_score, recall_score
-
+from sklearn.metrics import precision_score, recall_score
 from models.dataset import MyDataset
-from models.resnet50 import ResNet50
-from preprocessing.image_preprocessor import ImagePreprocessor
 from torch.utils.data import DataLoader
 import torchvision.models as models
 import torch.nn as nn
@@ -31,7 +25,6 @@ if __name__ == '__main__':
     n_epochs = 1
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
     model = model.to(device)
 
     for epoch in range(n_epochs):
@@ -66,66 +59,42 @@ if __name__ == '__main__':
             print(f"Epoch {epoch+1}: Loss = {epoch_loss:.4f}, Accuracy = {epoch_acc:.2f}%")
     
         # После обучения
-    im_prep = ImagePreprocessor()
     val_dir = "/data/val/"
-    cur_dir = os.getcwd().replace("\\", "/") 
-    f_names = os.listdir(cur_dir + val_dir)
-    random.shuffle(f_names)
-    imgs = []
-    lbls = []
 
-    for f_name in f_names[:500]:
-        img_path = os.path.join(cur_dir + val_dir, f_name)
-        mat_im = im_prep.read_image(img_path, True)
-        mat_im = im_prep.im_preprocess(mat_im, 224)
-        
-        imgs.append(mat_im)  # добавляем numpy array
-        
-        # Определяем метку
-        label = 1 if 'dog' in f_name.lower() else 0
-        lbls.append(label)
-
-    # Конвертируем в numpy массивы
-    imgs = np.array(imgs)  # теперь imgs.shape = (10, 224, 224, 3)
-    lbls = np.array(lbls)
-
-    print(f"Форма imgs до: {imgs.shape}")
-
-    # Конвертируем в тензоры и переставляем оси
-    imgs = torch.FloatTensor(imgs)  # сначала в тензор
-    imgs = imgs.permute(0, 3, 1, 2)  # потом переставляем оси (batch, channels, height, width)
-    lbls = torch.LongTensor(lbls)
-
-    print(f"Форма imgs после: {imgs.shape}")
-    print(f"Форма lbls: {lbls.shape}")
-
-    # Отправляем на устройство
-    imgs = imgs.to(device)
-    lbls = lbls.to(device)
+    val_dataset = MyDataset(val_dir, 224)
+    val_data_loader = DataLoader(val_dataset, batch_size=32, shuffle=True)
 
     # Предсказание
     model.eval()
-    with torch.no_grad():
-        outputs = model(imgs)
-        probs = torch.softmax(outputs, dim=1)
-        preds = torch.argmax(outputs, dim=1)
+    all_preds = []
+    all_labels = []
+    all_probs = []
     
+    with torch.no_grad():
 
-    # Вывод результатов
-    print("\n=== РЕЗУЛЬТАТЫ ВАЛИДАЦИИ ===")
-    for i in range(len(imgs)):
-        true_label = "dog" if lbls[i].item() == 1 else "cat"
-        pred_label = "dog" if preds[i].item() == 1 else "cat"
-        confidence = probs[i][preds[i]].item()
-        
-        correct = "✅" if preds[i].item() == lbls[i].item() else "❌"
-        
-        print(f"{i+1}. Истина: {true_label:4} | Предсказание: {pred_label:4} | "
-            f"Уверенность: {confidence:.4f} | {correct} | FileName: {f_names[i]}")
+        for images, labels in val_data_loader:
 
-    # Метрики
-    accuracy = (preds == lbls).sum().item() / len(lbls)
-    print(f"\nТочность на валидации: {accuracy*100:.2f}%")
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+            probs = torch.softmax(outputs, dim=1)
+            preds = torch.argmax(outputs, dim=1)
+
+            all_preds.extend(preds.cpu().numpy())
+            all_probs.extend(probs.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+            # write here loop with prob for one img
+        
+    accuracy = (np.array(all_preds) == np.array(all_labels)).mean()
+
+    print("=" * 50)
+    print("metrics")
+    print("this is accuracy: ", accuracy)
+    print("this is precision: ", precision_score(all_labels, all_preds))
+    print("this is recall: ", recall_score(all_labels, all_preds))
+    print("=" * 50)
     
     if accuracy > 0.96:
         torch.save(model.state_dict(), "my_model.pth")
